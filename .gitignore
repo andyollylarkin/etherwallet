@@ -1,6 +1,7 @@
 *dylib
 *so
 *.a
+!libkeccak.a
 .vscode
 .idea
 walgen

@@ -1,10 +1,14 @@
 CXX = gcc
 CXXFLAGS = -shared -fPIC -O3 -Wall -Wextra -pthread -march=native
-LDFLAGS = -lcrypto -lsecp256k1 ./libkeccak.a
+ifeq ($(shell uname), Darwin)
+LDFLAGS = -lcrypto -lsecp256k1 -lkeccak -L/opt/homebrew/lib
+else
+LDFLAGS = -lcrypto -lsecp256k1 ./libkeccak.a -L/usr/lib
+endif
 ifeq ($(shell uname), Darwin)
 INCLUDES = -I/opt/homebrew/include
 else
-INCLUDES = -I/usr/include -I/tmp/libkeccak
+INCLUDES = -I/usr/include -I.
 endif
 ifeq ($(shell uname), Darwin)
 TARGET = libwallet.dylib
