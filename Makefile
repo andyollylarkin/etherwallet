@@ -28,6 +28,12 @@ all: $(TARGET)
 $(TARGET): $(SRC)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDES) $(LDFLAGS)
 
+
+clean-all:
+	rm -f $(TARGET)
+	rm -f *.o
+	rm -f ./*.a
+
 clean:
 	rm -f $(TARGET)
 	rm -f *.o
@@ -39,4 +45,3 @@ build-test-app: $(TARGET)
 build-static: $(SRC)
 	$(CXX) -c -O3 -Wall -pthread -march=native $(INCLUDES) $(SRC)
 	ar rcs $(TARGET_STATIC) wallet_gen.o
-	$(MAKE) clean
