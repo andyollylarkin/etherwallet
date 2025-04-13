@@ -1,5 +1,6 @@
 *dylib
 *so
+*.a
 .vscode
 .idea
 walgen
