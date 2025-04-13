@@ -6,7 +6,7 @@ int main()
 {
 	unsigned char priv_key[ETH_PRIV_KEY_SIZE];
 	unsigned char address[ETH_ADDRESS_SIZE];
-	int sc = generate_single_eth_address(priv_key, address);
+	int sc = generate_eth_wallets(priv_key, address);
 	if (sc != 0)
 	{
 		fprintf(stderr, "Failed to generate single Ethereum address\n");

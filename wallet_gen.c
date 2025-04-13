@@ -8,14 +8,6 @@
 #include <unistd.h>
 #include <libkeccak.h>
 
-typedef struct
-{
-	size_t start;
-	size_t end;
-	unsigned char *priv_keys;
-	unsigned char *addresses;
-} ThreadData;
-
 static void secure_random(unsigned char *buf, size_t len)
 {
 	if (RAND_bytes(buf, len) != 1)
@@ -97,99 +89,35 @@ int generate_single_eth_address(unsigned char *priv_key, unsigned char *address)
 	return 0;
 }
 
-static void *generate_batch(void *arg)
+int generate_eth_wallets(
+	unsigned char *priv_keys,
+	unsigned char *address)
 {
-	ThreadData *data = (ThreadData *)arg;
-	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
-	unsigned char priv_key[32], pub_key[65], address[20];
-	secp256k1_pubkey pubkey;
+	unsigned char *addresses = malloc(sizeof(unsigned char) * 20);
+	unsigned char *priv_keys_thread = malloc(sizeof(unsigned char) * 32);
 
-	for (size_t i = data->start; i < data->end; ++i)
+	if (!addresses || !priv_keys_thread)
 	{
-		do
-		{
-			secure_random(priv_key, 32);
-		} while (!secp256k1_ec_seckey_verify(ctx, priv_key));
-
-		if (!secp256k1_ec_pubkey_create(ctx, &pubkey, priv_key))
-		{
-			fprintf(stderr, "Failed to create public key\n");
-			exit(1);
-		}
-
-		size_t pubkey_len = 65;
-		secp256k1_ec_pubkey_serialize(ctx, pub_key, &pubkey_len, &pubkey, SECP256K1_EC_UNCOMPRESSED);
-
-		EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
-		EVP_DigestInit_ex(mdctx, EVP_sha3_256(), NULL);
-		EVP_DigestUpdate(mdctx, pub_key + 1, 64);
-		unsigned char hash[32];
-		EVP_DigestFinal_ex(mdctx, hash, NULL);
-		EVP_MD_CTX_free(mdctx);
-
-		memcpy(address, hash + 12, 20);
-		memcpy(&data->priv_keys[i * 32], priv_key, 32);
-		memcpy(&data->addresses[i * 20], address, 20);
-	}
-
-	secp256k1_context_destroy(ctx);
-	return NULL;
-}
-
-int generate_eth_wallets(size_t num_keys,
-						 unsigned char *priv_keys,
-						 unsigned char *addresses,
-						 unsigned int num_threads)
-{
-	if (!priv_keys || !addresses)
-	{
+		free(addresses);
+		free(priv_keys_thread);
 		return -1;
 	}
 
-	if (num_threads == 0)
+	int res = generate_single_eth_address(
+		priv_keys_thread,
+		addresses);
+
+	if (res != 0)
 	{
-		num_threads = sysconf(_SC_NPROCESSORS_ONLN);
-		if (num_threads < 1)
-			num_threads = 1;
+		free(addresses);
+		free(priv_keys_thread);
+		return res;
 	}
 
-	pthread_t *threads = malloc(num_threads * sizeof(pthread_t));
-	if (!threads)
-		return -1;
+	memcpy(address, addresses, 20);
+	memcpy(priv_keys, priv_keys_thread, 32);
 
-	ThreadData *thread_data = malloc(num_threads * sizeof(ThreadData));
-	if (!thread_data)
-	{
-		free(threads);
-		return -1;
-	}
-
-	size_t batch_size = num_keys / num_threads;
-	for (unsigned int i = 0; i < num_threads; ++i)
-	{
-		thread_data[i].start = i * batch_size;
-		thread_data[i].end = (i == num_threads - 1) ? num_keys : thread_data[i].start + batch_size;
-		thread_data[i].priv_keys = priv_keys;
-		thread_data[i].addresses = addresses;
-
-		if (pthread_create(&threads[i], NULL, generate_batch, &thread_data[i]))
-		{
-			for (unsigned int j = 0; j < i; ++j)
-			{
-				pthread_join(threads[j], NULL);
-			}
-			free(threads);
-			free(thread_data);
-			return -1;
-		}
-	}
-
-	for (unsigned int i = 0; i < num_threads; ++i)
-	{
-		pthread_join(threads[i], NULL);
-	}
-
-	free(threads);
-	free(thread_data);
+	free(addresses);
+	free(priv_keys_thread);
 	return 0;
 }
