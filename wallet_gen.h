@@ -7,7 +7,7 @@
 #define ETH_ADDRESS_SIZE 20
 
 int generate_eth_wallets(
-	unsigned char *priv_keys,
+	unsigned char *priv_key,
 	unsigned char *address);
 int generate_single_eth_address(unsigned char *priv_key, unsigned char *address);
 

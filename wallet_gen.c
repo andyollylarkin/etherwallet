@@ -90,34 +90,8 @@ int generate_single_eth_address(unsigned char *priv_key, unsigned char *address)
 }
 
 int generate_eth_wallets(
-	unsigned char *priv_keys,
+	unsigned char *priv_key,
 	unsigned char *address)
 {
-	unsigned char *addresses = malloc(sizeof(unsigned char) * 20);
-	unsigned char *priv_keys_thread = malloc(sizeof(unsigned char) * 32);
-
-	if (!addresses || !priv_keys_thread)
-	{
-		free(addresses);
-		free(priv_keys_thread);
-		return -1;
-	}
-
-	int res = generate_single_eth_address(
-		priv_keys_thread,
-		addresses);
-
-	if (res != 0)
-	{
-		free(addresses);
-		free(priv_keys_thread);
-		return res;
-	}
-
-	memcpy(address, addresses, 20);
-	memcpy(priv_keys, priv_keys_thread, 32);
-
-	free(addresses);
-	free(priv_keys_thread);
-	return 0;
+	return generate_single_eth_address(priv_key, address);
 }
