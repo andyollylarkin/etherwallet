@@ -8,6 +8,31 @@
 #include <unistd.h>
 #include <libkeccak.h>
 
+#ifdef __linux__
+#include <sys/random.h>
+#include <fcntl.h>
+#include <errno.h>
+
+static void secure_random(unsigned char *buf, size_t len)
+{
+	ssize_t ret;
+	while (len > 0)
+	{
+		ret = getrandom(buf, len, 0);
+		if (ret < 0)
+		{
+			if (errno == EINTR)
+			{
+				continue; // Retry if interrupted by a signal
+			}
+			perror("getrandom failed");
+			exit(1);
+		}
+		buf += ret;
+		len -= ret;
+	}
+}
+#else
 static void secure_random(unsigned char *buf, size_t len)
 {
 	if (RAND_bytes(buf, len) != 1)
@@ -16,6 +41,8 @@ static void secure_random(unsigned char *buf, size_t len)
 		exit(1);
 	}
 }
+#endif
+
 
 int generate_single_eth_address(unsigned char *priv_key, unsigned char *address)
 {

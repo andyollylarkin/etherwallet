@@ -44,4 +44,4 @@ build-test-app: $(TARGET)
 
 build-static: $(SRC)
 	$(CXX) -c -O3 -Wall -pthread -march=native $(INCLUDES) $(SRC)
-	ar rcs $(TARGET_STATIC) wallet_gen.o
+	ar rcs $(TARGET_STATIC) *.o
