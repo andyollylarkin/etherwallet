@@ -56,7 +56,6 @@ void initialize_context_once()
 int generate_keypair(unsigned char priv_key[32], unsigned char pub_key[65])
 {
 	pthread_once(&context_once, initialize_context_once);
-	// secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
 	do
 	{
@@ -68,13 +67,10 @@ int generate_keypair(unsigned char priv_key[32], unsigned char pub_key[65])
 	if (!secp256k1_ec_pubkey_create(ctx, &pubkey, priv_key))
 	{
 		fprintf(stderr, "Failed to create public key\n");
-		// secp256k1_context_destroy(ctx);
 		return -1;
 	}
 
 	int result = secp256k1_ec_pubkey_serialize(ctx, pub_key, &pubkey_len, &pubkey, SECP256K1_EC_UNCOMPRESSED);
-
-	// secp256k1_context_destroy(ctx);
 
 	return result;
 }
