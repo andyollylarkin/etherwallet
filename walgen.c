@@ -1,29 +1,28 @@
 #include <stdio.h>
 #include "wallet_gen.h"
-#include <stdlib.h>
 
-int main()
+int main(int argc, char *argv[])
 {
-	unsigned char priv_key[ETH_PRIV_KEY_SIZE];
-	unsigned char address[ETH_ADDRESS_SIZE];
-	int sc = generate_eth_wallets(priv_key, address);
-	if (sc != 0)
-	{
-		fprintf(stderr, "Failed to generate single Ethereum address\n");
-		return sc;
-	}
+	unsigned char priv[32];
+	unsigned char pub[20];
 
-	printf("Private Key: ");
-	printf("0x");
-	for (int i = 0; i < ETH_PRIV_KEY_SIZE; i++)
+	if (generate_eth_wallets(&priv, &pub))
 	{
-		printf("%02x", priv_key[i]);
+		printf("Fail to generate pubkey!\n");
+	};
+
+	printf("Private key : ");
+	for (int i = 0; i < 32; i++)
+	{
+		printf("%02x", priv[i]);
 	}
-	printf("\nAddress: ");
-	printf("0x");
-	for (int i = 0; i < ETH_ADDRESS_SIZE; i++)
+	printf("\n");
+
+	printf("Address: 0x");
+
+	for (int i = 0; i < 20; i++)
 	{
-		printf("%02x", address[i]);
+		printf("%02x", pub[i]);
 	}
 	printf("\n");
 }

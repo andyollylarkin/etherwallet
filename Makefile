@@ -1,21 +1,21 @@
 CXX = gcc
 CXXFLAGS = -shared -fPIC -O3 -Wall -Wextra -pthread -march=native
 ifeq ($(shell uname), Darwin)
-LDFLAGS = -lcrypto -lsecp256k1 -lkeccak -L/opt/homebrew/lib
+LDFLAGS = -lcrypto ./lib/libkeccak_osx.a ./lib/libsecpbtc_osx.a -L/opt/homebrew/lib
 else
-LDFLAGS = -lcrypto -lsecp256k1 ./libkeccak.a -L/usr/lib
+LDFLAGS = -lcrypto ./lib/libsecpbtc_linux.a ./lib/libkeccak_linux.a -L/usr/lib
 endif
 ifeq ($(shell uname), Darwin)
-INCLUDES = -I/opt/homebrew/include
+INCLUDES = -I/opt/homebrew/include -I./include
 else
-INCLUDES = -I/usr/include -I.
+INCLUDES = -I/usr/include -I./include
 endif
 ifeq ($(shell uname), Darwin)
 TARGET = libwallet.dylib
 else
 TARGET = libwallet.so
 endif
-SRC = wallet_gen.c
+SRC = wallet_gen.c secpbtc.c
 
 ifeq ($(shell uname), Darwin)
 TARGET_STATIC = libwallet_osx.a
@@ -29,19 +29,19 @@ $(TARGET): $(SRC)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDES) $(LDFLAGS)
 
 
-clean-all:
-	rm -f $(TARGET)
-	rm -f *.o
-	rm -f ./*.a
+clean: clean-obj clean-libs
 
-clean:
-	rm -f $(TARGET)
+clean-obj:
 	rm -f *.o
+
+clean-libs:
+	rm -f $(TARGET) $(TARGET_STATIC)
 
 build-test-app: $(TARGET)
 	$(CXX) -L. -lwallet -O3 ./walgen.c -o walgen
 
 
 build-static: $(SRC)
-	$(CXX) -c -O3 -Wall -pthread -march=native $(INCLUDES) $(SRC)
+	$(CXX) -c -O3 -Wall -pthread -march=native $(LDFLAGS) $(INCLUDES) $(SRC)
 	ar rcs $(TARGET_STATIC) *.o
+	$(MAKE) clean-obj

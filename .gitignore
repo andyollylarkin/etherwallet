@@ -6,3 +6,10 @@
 .idea
 walgen
 *.o
+
+!libsecpbtc*
+!libkeccak*
+!secpbtc*
+
+build_test.sh
+walgen_bin
