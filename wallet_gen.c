@@ -7,42 +7,46 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <libkeccak.h>
+#include "random.h"
+#include <stdint.h>
 
-#ifdef __linux__
-#include <sys/random.h>
-#include <fcntl.h>
-#include <errno.h>
+// #ifdef __linux__
+// #include <sys/random.h>
+// #include <fcntl.h>
+// #include <errno.h>
+
+// static void secure_random(unsigned char *buf, size_t len)
+// {
+// 	ssize_t ret;
+// 	while (len > 0)
+// 	{
+// 		ret = getrandom(buf, len, 0);
+// 		if (ret < 0)
+// 		{
+// 			if (errno == EINTR)
+// 			{
+// 				continue; // Retry if interrupted by a signal
+// 			}
+// 			perror("getrandom failed");
+// 			exit(1);
+// 		}
+// 		buf += ret;
+// 		len -= ret;
+// 	}
+// }
+// #else
+static uint64_t state = 0;
 
 static void secure_random(unsigned char *buf, size_t len)
 {
-	ssize_t ret;
-	while (len > 0)
-	{
-		ret = getrandom(buf, len, 0);
-		if (ret < 0)
-		{
-			if (errno == EINTR)
-			{
-				continue; // Retry if interrupted by a signal
-			}
-			perror("getrandom failed");
-			exit(1);
-		}
-		buf += ret;
-		len -= ret;
-	}
+	gen_random(buf, &state);
+	// if (RAND_bytes(buf, len) != 1)
+	// {
+	// 	fprintf(stderr, "RAND_bytes failed\n");
+	// 	exit(1);
+	// }
 }
-#else
-static void secure_random(unsigned char *buf, size_t len)
-{
-	if (RAND_bytes(buf, len) != 1)
-	{
-		fprintf(stderr, "RAND_bytes failed\n");
-		exit(1);
-	}
-}
-#endif
-
+// #endif
 
 int generate_single_eth_address(unsigned char *priv_key, unsigned char *address)
 {
